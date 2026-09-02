@@ -1,6 +1,65 @@
 import SwiftUI
 import UIKit
 
+/// Resolved colors for the two optional text-input icon slots.
+struct TextInputIconColors {
+    let leading: Color
+    let trailing: Color
+}
+
+/// Resolve both icon slots without using ARGB 0 as an absence sentinel.
+/// Fully transparent is a valid explicit color.
+func resolveTextInputIconColors(
+    props: GenericProps,
+    colorScheme: ColorScheme,
+    fallback: Color
+) -> TextInputIconColors {
+    TextInputIconColors(
+        leading: resolveTextInputIconColor(
+            props: props,
+            colorKey: "leading_icon_color",
+            darkColorKey: "dark_leading_icon_color",
+            colorScheme: colorScheme,
+            fallback: fallback
+        ),
+        trailing: resolveTextInputIconColor(
+            props: props,
+            colorKey: "trailing_icon_color",
+            darkColorKey: "dark_trailing_icon_color",
+            colorScheme: colorScheme,
+            fallback: fallback
+        )
+    )
+}
+
+private func resolveTextInputIconColor(
+    props: GenericProps,
+    colorKey: String,
+    darkColorKey: String,
+    colorScheme: ColorScheme,
+    fallback: Color
+) -> Color {
+    let colorArgb = optionalTextInputColorArgb(props: props, key: colorKey)
+    let darkColorArgb = optionalTextInputColorArgb(props: props, key: darkColorKey)
+    let effectiveArgb = colorScheme == .dark ? (darkColorArgb ?? colorArgb) : colorArgb
+
+    return effectiveArgb.map { Color(argb: $0) } ?? fallback
+}
+
+/// Parse a present color without reserving any ARGB value as "absent". Two
+/// defaults distinguish a genuine first-sentinel color from parse failure.
+private func optionalTextInputColorArgb(props: GenericProps, key: String) -> Int? {
+    guard props.has(key) else { return nil }
+
+    let firstSentinel = 0x01234567
+    let secondSentinel = 0x07654321
+    let firstResult = props.getColor(key, default: firstSentinel)
+    guard firstResult == firstSentinel else { return firstResult }
+
+    let secondResult = props.getColor(key, default: secondSentinel)
+    return secondResult == secondSentinel ? nil : secondResult
+}
+
 /// Shared inner TextField core for both `outlined-text-input` and
 /// `filled-text-input` variants. Handles:
 ///   - value binding with echo-prevention sync (PHP can update `value` at any

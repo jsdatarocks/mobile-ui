@@ -12,7 +12,10 @@ paths serialize to the same wire tree.
   other controls take their colors, radii, and typography from the theme
   (`Native\Mobile\UI\Theme`). Use semantic props like `variant="primary"`
   instead of per-instance colors — per-instance visual overrides on these
-  controls are intentionally ignored.
+  controls are intentionally ignored. The narrow exception is leading and
+  trailing icons on outlined/filled text inputs: use `leading-icon-color` /
+  `trailing-icon-color` and optional `dark-*` companions when the decoration
+  needs its own color.
 - Bind state with `native:model="property"` (works on toggle, checkbox, chip,
   slider, select, radio-group, button-group, tab-row, and the text inputs).
   Use `.live` / `.blur` / `.debounce.Xms` modifiers to control sync frequency.
@@ -89,6 +92,10 @@ paths serialize to the same wire tree.
 - Disabled controls use the `surface-variant` (fill) + `on-surface-variant`
   (label) tokens on both platforms — tune disabled contrast by adjusting
   those two tokens, not per-component.
+- `<native:outlined-text-input>` and `<native:filled-text-input>` accept
+  `leading-icon-color`, `dark-leading-icon-color`, `trailing-icon-color`, and
+  `dark-trailing-icon-color`. The main color falls back into dark mode when its
+  companion is absent; loading indicators never inherit the trailing override.
 - Buttons render their variant token solid; for a softer tonal fill set
   opacity on the token itself (e.g. `'secondary' => 'fuchsia-500/70'`).
 - `<native:icon>` accepts platform enum overrides as attributes —

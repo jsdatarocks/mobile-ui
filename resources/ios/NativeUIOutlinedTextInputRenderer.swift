@@ -10,9 +10,9 @@ import SwiftUI
 ///   └──────────────────────────────┘
 ///     supporting text               ← optional (error-colored if error)
 ///
-/// All chrome colors resolve from `NativeUITheme.shared`. Per-instance color
-/// overrides are intentionally not supported (Model 3 — drop to
-/// `<pressable>` for fully custom input visuals).
+/// All chrome colors resolve from `NativeUITheme.shared`. Leading and trailing
+/// icon colors are optional per-instance decoration overrides; other visual
+/// customization remains theme-driven.
 struct NativeUIOutlinedTextInputRenderer: View {
     let node: NativeUINode
 
@@ -51,6 +51,12 @@ struct NativeUIOutlinedTextInputRenderer: View {
 
         let supportingColor: Color = isError ? theme.destructive : theme.onSurfaceVariant
 
+        let iconColors = resolveTextInputIconColors(
+            props: p,
+            colorScheme: colorScheme,
+            fallback: theme.onSurfaceVariant
+        )
+
         // The visible label doubles as the field's accessibility label unless
         // an explicit a11y_label override was provided. When the field is in
         // an error state, the supporting text must be announced: it rides the
@@ -71,7 +77,7 @@ struct NativeUIOutlinedTextInputRenderer: View {
                 if !leadingIcon.isEmpty {
                     Image(systemName: getIconForName(leadingIcon))
                         .nuiScaledFont(size: metrics.iconSize)
-                        .foregroundStyle(theme.onSurfaceVariant)
+                        .foregroundStyle(iconColors.leading)
                 }
                 if !prefixText.isEmpty {
                     Text(prefixText)
@@ -97,7 +103,7 @@ struct NativeUIOutlinedTextInputRenderer: View {
                 } else if !trailingIcon.isEmpty {
                     Image(systemName: getIconForName(trailingIcon))
                         .nuiScaledFont(size: metrics.iconSize)
-                        .foregroundStyle(theme.onSurfaceVariant)
+                        .foregroundStyle(iconColors.trailing)
                 }
             }
             .padding(.horizontal, metrics.hPadding)

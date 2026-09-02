@@ -42,8 +42,11 @@ object FilledTextInputRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
         val props = parseTextInputProps(node)
-        val theme = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
+        val isDark = isSystemInDarkTheme()
+        val theme = if (isDark) NativeUITheme.dark else NativeUITheme.light
         val scope = rememberCoroutineScope()
+        val leadingIconColor = props.leadingIconColors.resolve(isDark, props.disabled)
+        val trailingIconColor = props.trailingIconColors.resolve(isDark, props.disabled)
 
         // Local state owns text + caret (TextFieldValue). Initial caret sits at
         // the end of any pre-filled value, matching the server-push below.
@@ -133,10 +136,10 @@ object FilledTextInputRenderer {
             supportingText = supportingSlot(props.supporting),
             prefix = prefixSlot(props.prefix),
             suffix = suffixSlot(props.suffix),
-            leadingIcon = leadingIconSlot(props.leadingIcon),
+            leadingIcon = leadingIconSlot(props.leadingIcon, leadingIconColor),
             trailingIcon = if (props.loading) {
                 { CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = theme.onSurfaceVariant) }
-            } else trailingIconSlot(props.trailingIcon),
+            } else trailingIconSlot(props.trailingIcon, trailingIconColor),
             isError = props.isError,
             singleLine = props.singleLine,
             maxLines = props.maxLines,
