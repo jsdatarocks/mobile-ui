@@ -91,6 +91,28 @@ decorative (silent to screen readers) unless given an `a11y-label`. List items
 with a trailing icon button take `trailing-a11y-label` (fluent:
 `->trailingA11yLabel()`) to label that button separately from the row.
 
+## Text input icon colors
+
+Outlined and filled text inputs accept independent colors for their leading
+and trailing icons. Values use the same color grammar as other element props.
+The regular color is also used in dark mode unless a `dark-*` companion is set:
+
+```blade
+<native:outlined-text-input
+    label="Email"
+    leading-icon="email"
+    leading-icon-color="amber-600"
+    dark-leading-icon-color="amber-300"
+    trailing-icon="check"
+    trailing-icon-color="#0F766E"
+/>
+```
+
+The fluent equivalents are `leadingIconColor()`, `darkLeadingIconColor()`,
+`trailingIconColor()`, and `darkTrailingIconColor()`. These overrides affect
+only their icon slot, retain disabled-state attenuation, and do not tint the
+loading indicator that replaces a trailing icon.
+
 ## Caret & Selection Reporting
 
 > **Requires** `nativephp/mobile` 4.0+, which ships the `text_selection`

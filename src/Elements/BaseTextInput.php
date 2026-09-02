@@ -7,20 +7,22 @@ use Native\Mobile\Edge\Element;
 use Native\Mobile\Icon\AndroidSymbol;
 use Native\Mobile\Icon\IconResolver;
 use Native\Mobile\Icon\IosSymbol;
+use Native\Mobile\UI\Concerns\ResolvesColorValues;
 
 /**
  * Shared base for the text input variants (`outlined-text-input`,
  * `filled-text-input`).
  *
- * API shape follows Model 3 — NO per-instance color / font overrides. All
- * colors, corner radii, and typography come from the theme. For fully custom
- * input styling, drop to `<pressable>` wrapping a plain HTML-like form.
+ * API shape follows Model 3 — chrome and text colors come from the theme.
+ * Leading and trailing icon colors are the narrow exception: each decoration
+ * can receive an independent light/dark override. For fully custom input
+ * styling, drop to `<pressable>` wrapping a plain HTML-like form.
  *
  * Allowed per-instance:
  *   - `value`, `placeholder`, `label`, `supporting`  (content)
  *   - `disabled`, `readOnly`, `error`, `loading`     (state)
  *   - `keyboard`, `autocapitalize`, `secure`, `maxLength`, `multiline`, `maxLines`, `minLines` (behavior)
- *   - `prefix`, `suffix`, `leading-icon`, `trailing-icon` (decorations)
+ *   - `prefix`, `suffix`, `leading-icon`, `trailing-icon` and their colors (decorations)
  *   - `size`                                          (sm | md | lg)
  *   - `a11y-label`, `a11y-hint`                       (accessibility)
  *   - `@change`, `@submit`, `@selectionChange`        (callbacks)
@@ -38,6 +40,8 @@ use Native\Mobile\Icon\IosSymbol;
  */
 abstract class BaseTextInput extends Element
 {
+    use ResolvesColorValues;
+
     /** @var array<string, mixed> */
     protected array $inputProps = [];
 
@@ -133,6 +137,26 @@ abstract class BaseTextInput extends Element
 
         if ($trailingIcon !== null || $trailingIconIos !== null || $trailingIconAndroid !== null) {
             $this->trailingIcon($trailingIcon, $trailingIconIos, $trailingIconAndroid);
+        }
+
+        $leadingIconColor = $attrs['leading-icon-color'] ?? $attrs['leadingIconColor'] ?? null;
+        if ($leadingIconColor !== null) {
+            $this->leadingIconColor($leadingIconColor);
+        }
+
+        $darkLeadingIconColor = $attrs['dark-leading-icon-color'] ?? $attrs['darkLeadingIconColor'] ?? null;
+        if ($darkLeadingIconColor !== null) {
+            $this->darkLeadingIconColor($darkLeadingIconColor);
+        }
+
+        $trailingIconColor = $attrs['trailing-icon-color'] ?? $attrs['trailingIconColor'] ?? null;
+        if ($trailingIconColor !== null) {
+            $this->trailingIconColor($trailingIconColor);
+        }
+
+        $darkTrailingIconColor = $attrs['dark-trailing-icon-color'] ?? $attrs['darkTrailingIconColor'] ?? null;
+        if ($darkTrailingIconColor !== null) {
+            $this->darkTrailingIconColor($darkTrailingIconColor);
         }
 
         // Size + a11y
@@ -369,6 +393,34 @@ abstract class BaseTextInput extends Element
                 $this->inputProps['trailing_icon_variant'] = $r['variant'];
             }
         }
+
+        return $this;
+    }
+
+    public function leadingIconColor(string $color): static
+    {
+        $this->inputProps['leading_icon_color'] = $this->resolveColorValue($color);
+
+        return $this;
+    }
+
+    public function darkLeadingIconColor(string $color): static
+    {
+        $this->inputProps['dark_leading_icon_color'] = $this->resolveColorValue($color);
+
+        return $this;
+    }
+
+    public function trailingIconColor(string $color): static
+    {
+        $this->inputProps['trailing_icon_color'] = $this->resolveColorValue($color);
+
+        return $this;
+    }
+
+    public function darkTrailingIconColor(string $color): static
+    {
+        $this->inputProps['dark_trailing_icon_color'] = $this->resolveColorValue($color);
 
         return $this;
     }

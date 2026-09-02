@@ -2,8 +2,10 @@ package com.nativephp.plugins.native_ui.ui
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -13,6 +15,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import com.nativephp.mobile.ui.MaterialIcon
+import com.nativephp.mobile.ui.nativerender.GenericProps
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +33,45 @@ import kotlinx.coroutines.launch
 /** Dispatch policy — matches the `sync_mode` prop from the PHP side. */
 internal enum class SyncMode { LIVE, BLUR, DEBOUNCE }
 
+/** Optional light/dark override for one text-input icon slot. */
+internal data class TextInputIconColors(
+    private val colorArgb: Int?,
+    private val darkColorArgb: Int?,
+) {
+    fun resolve(isDark: Boolean, disabled: Boolean): Color? {
+        val effectiveArgb = if (isDark) darkColorArgb ?: colorArgb else colorArgb
+        if (effectiveArgb == null) return null
+
+        val color = Color(effectiveArgb)
+        return if (disabled) color.copy(alpha = color.alpha * 0.38f) else color
+    }
+}
+
+private fun parseTextInputIconColors(
+    props: GenericProps,
+    colorKey: String,
+    darkColorKey: String,
+): TextInputIconColors = TextInputIconColors(
+    colorArgb = props.getOptionalColor(colorKey),
+    darkColorArgb = props.getOptionalColor(darkColorKey),
+)
+
+/**
+ * Parse a present color without reserving any ARGB value as "absent".
+ * Two defaults distinguish a genuine first-sentinel color from parse failure.
+ */
+private fun GenericProps.getOptionalColor(key: String): Int? {
+    if (!has(key)) return null
+
+    val firstSentinel = 0x01234567
+    val secondSentinel = 0x07654321
+    val firstResult = getColor(key, firstSentinel)
+    if (firstResult != firstSentinel) return firstResult
+
+    val secondResult = getColor(key, secondSentinel)
+    return if (secondResult == secondSentinel) null else secondResult
+}
+
 private fun parseSyncMode(value: String): SyncMode = when (value.lowercase()) {
     "blur"     -> SyncMode.BLUR
     "debounce" -> SyncMode.DEBOUNCE
@@ -45,6 +87,8 @@ internal data class TextInputProps(
     val suffix: String,
     val leadingIcon: String,
     val trailingIcon: String,
+    val leadingIconColors: TextInputIconColors,
+    val trailingIconColors: TextInputIconColors,
     val secure: Boolean,
     val multiline: Boolean,
     val maxLines: Int,
@@ -109,6 +153,8 @@ internal fun parseTextInputProps(node: NativeUINode): TextInputProps {
         suffix       = p.getString("suffix"),
         leadingIcon  = p.getString("leading_icon"),
         trailingIcon = p.getString("trailing_icon"),
+        leadingIconColors = parseTextInputIconColors(p, "leading_icon_color", "dark_leading_icon_color"),
+        trailingIconColors = parseTextInputIconColors(p, "trailing_icon_color", "dark_trailing_icon_color"),
         secure       = p.getBool("secure"),
         multiline    = p.getBool("multiline"),
         maxLines     = p.getInt("max_lines").let { if (it > 0) it else if (p.getBool("multiline")) 5 else 1 },
@@ -408,12 +454,24 @@ internal fun suffixSlot(text: String): (@Composable () -> Unit)? =
     if (text.isEmpty()) null else ({ Text(text, fontFamily = nuiDefaultFontFamily()) })
 
 @Composable
-internal fun leadingIconSlot(name: String): (@Composable () -> Unit)? =
-    if (name.isEmpty()) null else ({ MaterialIcon(name = name, contentDescription = null) })
+internal fun leadingIconSlot(name: String, color: Color?): (@Composable () -> Unit)? =
+    if (name.isEmpty()) null else ({
+        MaterialIcon(
+            name = name,
+            contentDescription = null,
+            tint = color ?: LocalContentColor.current,
+        )
+    })
 
 @Composable
-internal fun trailingIconSlot(name: String): (@Composable () -> Unit)? =
-    if (name.isEmpty()) null else ({ MaterialIcon(name = name, contentDescription = null) })
+internal fun trailingIconSlot(name: String, color: Color?): (@Composable () -> Unit)? =
+    if (name.isEmpty()) null else ({
+        MaterialIcon(
+            name = name,
+            contentDescription = null,
+            tint = color ?: LocalContentColor.current,
+        )
+    })
 
 /**
  * Apply optional a11y label/hint to a modifier.

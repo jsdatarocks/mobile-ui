@@ -49,6 +49,12 @@ struct NativeUIFilledTextInputRenderer: View {
 
         let supportingColor: Color = isError ? theme.destructive : theme.onSurfaceVariant
 
+        let iconColors = resolveTextInputIconColors(
+            props: p,
+            colorScheme: colorScheme,
+            fallback: theme.onSurfaceVariant
+        )
+
         // The visible label doubles as the field's accessibility label unless
         // an explicit a11y_label override was provided. When the field is in
         // an error state, the supporting text must be announced: it rides the
@@ -70,7 +76,7 @@ struct NativeUIFilledTextInputRenderer: View {
                     if !leadingIcon.isEmpty {
                         Image(systemName: getIconForName(leadingIcon))
                             .nuiScaledFont(size: metrics.iconSize)
-                            .foregroundStyle(theme.onSurfaceVariant)
+                            .foregroundStyle(iconColors.leading)
                     }
                     if !prefixText.isEmpty {
                         Text(prefixText)
@@ -96,7 +102,7 @@ struct NativeUIFilledTextInputRenderer: View {
                     } else if !trailingIcon.isEmpty {
                         Image(systemName: getIconForName(trailingIcon))
                             .nuiScaledFont(size: metrics.iconSize)
-                            .foregroundStyle(theme.onSurfaceVariant)
+                            .foregroundStyle(iconColors.trailing)
                     }
                 }
                 .padding(.horizontal, metrics.hPadding)

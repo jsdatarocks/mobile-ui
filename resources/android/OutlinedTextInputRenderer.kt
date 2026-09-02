@@ -33,16 +33,19 @@ import com.nativephp.plugins.native_ui.NativeUITheme
  *
  * Emphasis: lower than filled. Border-only chrome, good default for forms.
  *
- * All colors drawn from [NativeUITheme] — per-instance color overrides are
- * intentionally not honored (plan doc Model 3).
+ * Chrome and text colors come from [NativeUITheme]. Leading and trailing icon
+ * colors are optional per-instance decoration overrides.
  */
 object OutlinedTextInputRenderer {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
         val props = parseTextInputProps(node)
-        val theme = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
+        val isDark = isSystemInDarkTheme()
+        val theme = if (isDark) NativeUITheme.dark else NativeUITheme.light
         val scope = rememberCoroutineScope()
+        val leadingIconColor = props.leadingIconColors.resolve(isDark, props.disabled)
+        val trailingIconColor = props.trailingIconColors.resolve(isDark, props.disabled)
 
         // Echo-prevention sync (plan K). Local state owns what the user is
         // typing — now a TextFieldValue so we also own the caret / selection.
@@ -146,10 +149,10 @@ object OutlinedTextInputRenderer {
             supportingText = supportingSlot(props.supporting),
             prefix = prefixSlot(props.prefix),
             suffix = suffixSlot(props.suffix),
-            leadingIcon = leadingIconSlot(props.leadingIcon),
+            leadingIcon = leadingIconSlot(props.leadingIcon, leadingIconColor),
             trailingIcon = if (props.loading) {
                 { CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = theme.onSurfaceVariant) }
-            } else trailingIconSlot(props.trailingIcon),
+            } else trailingIconSlot(props.trailingIcon, trailingIconColor),
             isError = props.isError,
             singleLine = props.singleLine,
             maxLines = props.maxLines,
